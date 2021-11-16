@@ -6,6 +6,7 @@ pub enum Type {
     Identifier,
     Ptr(Box<Type>),
     Invalid,
+    Block,
 }
 
 pub enum Operator {
@@ -37,4 +38,7 @@ pub enum Node {
     Assign(Box<Node>, Box<Node>),
     Print(Box<Node>),
     Comment(String),
+    Block(Vec<Node>),
+    Proc(Box<Node>, Box<Node>),
+    Call(Box<Node>),
 }

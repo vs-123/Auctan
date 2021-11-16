@@ -1,7 +1,15 @@
-// This is how you define variables
-language = "Piet";
-// Reassign
-language = "Auctan";
+// Basic Auctan example
+print "Hello World!\n";
 
-// Print
-print "Hello " + language;
+favorite_food = "Biryani";
+print "My favorite food is " + favorite_food + "\n";
+
+// `proc` stands for 'procedure', it is kind of similar to a function, but it is not a function.
+// Like functions, it executes a block of code.
+// But unlike functions, it does not return a value nor takes arguments.
+proc print_hello {
+    print "Hello";
+}
+
+call print_hello;
+print " " + favorite_food + " eater!";
