@@ -1,0 +1,53 @@
+use std::str::FromStr;
+use crate::ast::{Type, Node, Operator};
+use crate::ast;
+
+grammar;
+
+Num: Node = {
+    <n:r"[0-9]+"> => Node::Num(n.to_string()),
+}
+
+Ident: Node = {
+    <n:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Node::Identifier(n.to_string()),
+}
+
+Str: Node = {
+    <n:r#""(\\.|[^"])*""#> => Node::Str(n.to_string()),
+}
+
+Literal: Node = {
+    Num, Str, Ident,
+}
+
+Expr: Node = {
+    <n:Literal> => n,
+    "(" <e:Expr> ")" => e,
+    <n:Literal> "+" <m:Expr> => Node::Add(Box::new(n), Box::new(m)),
+    <n:Literal> "-" <m:Expr> => Node::Sub(Box::new(n), Box::new(m)),
+    <n:Literal> "*" <m:Expr> => Node::Mul(Box::new(n), Box::new(m)),
+    <n:Literal> "/" <m:Expr> => Node::Div(Box::new(n), Box::new(m)),
+}
+
+Assign: Node = {
+    <n:Ident> "=" <m:Expr> ";" => ast::Node::Assign(Box::new(n), Box::new(m)),
+}
+
+Print: Node = {
+    "print" <e:Expr> ";" => ast::Node::Print(Box::new(e)),
+}
+
+Comment: Node = {
+    <n:r"//.*"> => Node::Comment(n.to_string()),
+}
+
+Top: Node = {
+    Assign,
+    Print,
+    Comment,
+}
+
+pub Program: Vec<Node> = {
+    <Top> => vec![<>],
+    <head:Program> <tail:Top> => vec![head, vec![tail]].concat()
+}
