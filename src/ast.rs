@@ -9,36 +9,27 @@ pub enum Type {
     Block,
 }
 
-pub enum Operator {
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Mod,
-    Eq,
-    Neq,
-    Lt,
-    Gt,
-    Le,
-    Ge,
-    And,
-    Or,
-    Not,
-}
-
 #[derive(Clone, Debug)]
 pub enum Node {
     Num(String),
     Str(String),
     Identifier(String),
+
     Add(Box<Node>, Box<Node>),
     Sub(Box<Node>, Box<Node>),
     Mul(Box<Node>, Box<Node>),
     Div(Box<Node>, Box<Node>),
+    Eq(Box<Node>, Box<Node>),
+    NotEq(Box<Node>, Box<Node>),
+    Gt(Box<Node>, Box<Node>),
+    Lt(Box<Node>, Box<Node>),
+
     Assign(Box<Node>, Box<Node>),
     Print(Box<Node>),
     Comment(String),
     Block(Vec<Node>),
     Proc(Box<Node>, Box<Node>),
     Call(Box<Node>),
+    If(Box<Node>, Box<Node>),
+    IfElse(Box<Node>, Box<Node>, Box<Node>),
 }

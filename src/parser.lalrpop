@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use crate::ast::{Type, Node, Operator};
+use crate::ast::{Type, Node};
 use crate::ast;
 
 grammar;
@@ -26,6 +26,10 @@ Expr: Node = {
     <n:Literal> "-" <m:Expr> => Node::Sub(Box::new(n), Box::new(m)),
     <n:Literal> "*" <m:Expr> => Node::Mul(Box::new(n), Box::new(m)),
     <n:Literal> "/" <m:Expr> => Node::Div(Box::new(n), Box::new(m)),
+    <n:Literal> "==" <m:Expr> => Node::Eq(Box::new(n), Box::new(m)),
+    <n:Literal> "!=" <m:Expr> => Node::NotEq(Box::new(n), Box::new(m)),
+    <n:Literal> ">" <m:Expr> => Node::Gt(Box::new(n), Box::new(m)),
+    <n:Literal> "<" <m:Expr> => Node::Lt(Box::new(n), Box::new(m)),
     "(" <e:Expr> ")" => e,
 }
 
@@ -48,6 +52,8 @@ Top: Node = {
     Block,
     Proc,
     Call,
+    If,
+    IfElse,
 }
 
 TopList: Vec<Node> = {
@@ -67,6 +73,14 @@ Proc: Node = {
 // Calls a procedure
 Call: Node = {
     "call" <proc_name:Ident> ";" => ast::Node::Call(Box::new(proc_name)),
+}
+
+If: Node = {
+    "if" "(" <expr:Expr> ")" <body:Block> => ast::Node::If(Box::new(expr), Box::new(body)),
+}
+
+IfElse: Node = {
+    "if" "(" <expr:Expr> ")" <body:Block> "else" <else_body:Block> => ast::Node::IfElse(Box::new(expr), Box::new(body), Box::new(else_body)),
 }
 
 pub Program: Vec<Node> = {

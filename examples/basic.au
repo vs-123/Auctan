@@ -13,3 +13,12 @@ proc print_hello {
 
 call print_hello;
 print " " + favorite_food + " eater!";
+
+// Auctan doesn't support booleans, instead, you use 1 or 0 to represent true or false respectively.
+age = 18;
+
+if (age > 17) {
+    print "You can drive";
+} else {
+    print "You can't drive";
+}

@@ -263,6 +263,142 @@ impl Interpreter {
                 return (ast::Type::Invalid, "".to_string());
             }
 
+            Node::Eq(left, right) => {
+                let (mut left_type, mut left) = self.get_type_and_value(*left);
+                let (mut right_type, mut right) = self.get_type_and_value(*right);
+
+                // Checking left
+                if left_type == ast::Type::Identifier {
+                    let (this_left_type, left_value) = self.get_variable(left);
+                    left_type = this_left_type;
+                    left = left_value;
+                }
+
+                // Checking right
+                if right_type == ast::Type::Identifier {
+                    let (this_right_type, right_value) = self.get_variable(right);
+                    right_type = this_right_type;
+                    right = right_value;
+                }
+
+                if left == right {
+                    return (ast::Type::Num, "1".to_string());
+                } else {
+                    return (ast::Type::Num, "0".to_string());
+                }
+
+                return (ast::Type::Invalid, "".to_string());
+            }
+
+            Node::NotEq(left, right) => {
+                let (mut left_type, mut left) = self.get_type_and_value(*left);
+                let (mut right_type, mut right) = self.get_type_and_value(*right);
+
+                // Checking left
+                if left_type == ast::Type::Identifier {
+                    let (this_left_type, left_value) = self.get_variable(left);
+                    left_type = this_left_type;
+                    left = left_value;
+                }
+
+                // Checking right
+                if right_type == ast::Type::Identifier {
+                    let (this_right_type, right_value) = self.get_variable(right);
+                    right_type = this_right_type;
+                    right = right_value;
+                }
+
+                if left != right {
+                    return (ast::Type::Num, "1".to_string());
+                } else {
+                    return (ast::Type::Num, "0".to_string());
+                }
+
+                return (ast::Type::Invalid, "".to_string());
+            }
+
+            Node::Gt(left, right) => {
+                let (mut left_type, mut left) = self.get_type_and_value(*left);
+                let (mut right_type, mut right) = self.get_type_and_value(*right);
+
+                // Checking left
+                if left_type == ast::Type::Identifier {
+                    let (this_left_type, left_value) = self.get_variable(left);
+                    left_type = this_left_type;
+                    left = left_value;
+                }
+
+                // Checking right
+                if right_type == ast::Type::Identifier {
+                    let (this_right_type, right_value) = self.get_variable(right);
+                    right_type = this_right_type;
+                    right = right_value;
+                }
+
+                if left_type != ast::Type::Num {
+                    Interpreter::error(format!(
+                        "Code:\n{} | {}\nProblem: `{}` is not a number.",
+                        self.line_number, self.source_code[self.line_number], left
+                    ));
+                }
+
+                if right_type != ast::Type::Num {
+                    Interpreter::error(format!(
+                        "Code:\n{} | {}\nProblem: `{}` is not a number.",
+                        self.line_number, self.source_code[self.line_number], right
+                    ));
+                }
+
+                if left.parse::<f64>().unwrap() > right.parse::<f64>().unwrap() {
+                    return (ast::Type::Num, "1".to_string());
+                } else {
+                    return (ast::Type::Num, "0".to_string());
+                }
+
+                return (ast::Type::Invalid, "".to_string());
+            }
+
+            Node::Lt(left, right) => {
+                let (mut left_type, mut left) = self.get_type_and_value(*left);
+                let (mut right_type, mut right) = self.get_type_and_value(*right);
+
+                // Checking left
+                if left_type == ast::Type::Identifier {
+                    let (this_left_type, left_value) = self.get_variable(left);
+                    left_type = this_left_type;
+                    left = left_value;
+                }
+
+                // Checking right
+                if right_type == ast::Type::Identifier {
+                    let (this_right_type, right_value) = self.get_variable(right);
+                    right_type = this_right_type;
+                    right = right_value;
+                }
+
+                if left_type != ast::Type::Num {
+                    Interpreter::error(format!(
+                        "Code:\n{} | {}\nProblem: `{}` is not a number.",
+                        self.line_number, self.source_code[self.line_number], left
+                    ));
+                }
+
+                if right_type != ast::Type::Num {
+                    Interpreter::error(format!(
+                        "Code:\n{} | {}\nProblem: `{}` is not a number.",
+                        self.line_number, self.source_code[self.line_number], right
+                    ));
+                }
+
+                if left.parse::<f64>().unwrap() < right.parse::<f64>().unwrap() {
+                    return (ast::Type::Num, "1".to_string());
+                } else {
+                    return (ast::Type::Num, "0".to_string());
+                }
+
+                return (ast::Type::Invalid, "".to_string());
+            }
+
             Node::Block(nodes) => {
                 let mut result = (ast::Type::Block, "".to_string());
                 return result; // No value for block
@@ -411,8 +547,52 @@ impl Interpreter {
 
                 // Run the procedure
                 self.run_procedure(*name.clone());
+            }
 
-                // println!("Ran procedure `{}`", name_value);
+            Node::If(condition, nodes) => {
+                let (mut condition_type, mut condition_value) = self.get_type_and_value(*condition);
+
+                if condition_type != ast::Type::Num {
+                    Interpreter::error(format!(
+                        "Code:\n{} | {}\nProblem: `{}` is not a valid condition.",
+                        self.line_number, self.source_code[self.line_number], condition_value
+                    ));
+                }
+
+                if condition_value == "0" {
+                    // Do nothing
+                } else {
+                    if let ast::Node::Block(nodes) = *nodes.clone() {
+                        for node in nodes {
+                            compiled_output += &self.interpret_node(node);
+                        }
+                    }
+                }
+            }
+
+            Node::IfElse(condition, nodes, else_nodes) => {
+                let (mut condition_type, mut condition_value) = self.get_type_and_value(*condition);
+
+                if condition_type != ast::Type::Num {
+                    Interpreter::error(format!(
+                        "Code:\n{} | {}\nProblem: `{}` is not a valid condition.",
+                        self.line_number, self.source_code[self.line_number], condition_value
+                    ));
+                }
+
+                if condition_value == "0" {
+                    if let ast::Node::Block(else_nodes) = *nodes.clone() {
+                        for node in else_nodes {
+                            compiled_output += &self.interpret_node(node);
+                        }
+                    }
+                } else {
+                    if let ast::Node::Block(nodes) = *nodes.clone() {
+                        for node in nodes {
+                            compiled_output += &self.interpret_node(node);
+                        }
+                    }
+                }
             }
 
             _ => {}
