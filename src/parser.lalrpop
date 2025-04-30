@@ -1,0 +1,89 @@
+use std::str::FromStr;
+use crate::ast::{Type, Node};
+use crate::ast;
+
+grammar;
+
+Num: Node = {
+    <n:r"[0-9]+(\.[0-9]+)?"> => Node::Num(n.to_string()),
+}
+
+Ident: Node = {
+    <n:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Node::Identifier(n.to_string()),
+}
+
+Str: Node = {
+    <n:r#""(\\.|[^"])*""#> => Node::Str(n.to_string()),
+}
+
+Literal: Node = {
+    Num, Str, Ident
+}
+
+Expr: Node = {
+    <n:Literal> => n,
+    <n:Literal> "+" <m:Expr> => Node::Add(Box::new(n), Box::new(m)),
+    <n:Literal> "-" <m:Expr> => Node::Sub(Box::new(n), Box::new(m)),
+    <n:Literal> "*" <m:Expr> => Node::Mul(Box::new(n), Box::new(m)),
+    <n:Literal> "/" <m:Expr> => Node::Div(Box::new(n), Box::new(m)),
+    <n:Literal> "==" <m:Expr> => Node::Eq(Box::new(n), Box::new(m)),
+    <n:Literal> "!=" <m:Expr> => Node::NotEq(Box::new(n), Box::new(m)),
+    <n:Literal> ">" <m:Expr> => Node::Gt(Box::new(n), Box::new(m)),
+    <n:Literal> "<" <m:Expr> => Node::Lt(Box::new(n), Box::new(m)),
+    "(" <e:Expr> ")" => e,
+}
+
+Assign: Node = {
+    <n:Ident> "=" <m:Expr> ";" => ast::Node::Assign(Box::new(n), Box::new(m)),
+}
+
+Print: Node = {
+    "print" <e:Expr> ";" => ast::Node::Print(Box::new(e)),
+}
+
+Comment: Node = {
+    <n:r"//.*"> => Node::Comment(n.to_string()),
+}
+
+Top: Node = {
+    Assign,
+    Print,
+    Comment,
+    Block,
+    Proc,
+    Call,
+    If,
+    IfElse,
+}
+
+TopList: Vec<Node> = {
+    <Top> => vec![<>],
+    <head:TopList> <tail:Top> => vec![head, vec![tail]].concat(),
+}
+
+Block: Node = {
+    "{" "}" => Node::Block(vec![]),
+    "{" <body:TopList> "}" => Node::Block(body)
+};
+
+Proc: Node = {
+    "proc" <name:Ident> <body:Block> => ast::Node::Proc(Box::new(name), Box::new(body)),
+}
+
+// Calls a procedure
+Call: Node = {
+    "call" <proc_name:Ident> ";" => ast::Node::Call(Box::new(proc_name)),
+}
+
+If: Node = {
+    "if" "(" <expr:Expr> ")" <body:Block> => ast::Node::If(Box::new(expr), Box::new(body)),
+}
+
+IfElse: Node = {
+    "if" "(" <expr:Expr> ")" <body:Block> "else" <else_body:Block> => ast::Node::IfElse(Box::new(expr), Box::new(body), Box::new(else_body)),
+}
+
+pub Program: Vec<Node> = {
+    <Top> => vec![<>],
+    <head:Program> <tail:Top> => vec![head, vec![tail]].concat()
+}
